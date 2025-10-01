@@ -8,9 +8,11 @@
   },
   "dependencies": {
     "@hono/node-server": "^1.19.5",
+    "@hono/zod-validator": "^0.7.3",
     "@prisma/client": "^6.16.2",
     "hono": "^4.9.9",
-    "prisma": "^6.16.2"
+    "prisma": "^6.16.2",
+    "zod": "^4.1.11"
   },
   "devDependencies": {
     "@types/node": "^20.11.17",
