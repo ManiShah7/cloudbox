@@ -1,9 +1,12 @@
 import { Hono } from "hono";
 import { zValidator } from "@hono/zod-validator";
 import { z } from "zod";
+import { sign } from "hono/jwt";
+import bcrypt from "bcryptjs";
 import { prisma } from "../lib/prisma";
+import { createRouter } from "../lib/hono";
 
-const auth = new Hono();
+const auth = createRouter();
 
 const registerSchema = z.object({
   email: z.email(),
@@ -27,12 +30,22 @@ auth.post("/register", zValidator("json", registerSchema), async (c) => {
     return c.json({ message: "User already exists" }, 400);
   }
 
+  const hashedPassword = await bcrypt.hash(password, 10);
+
   const user = await prisma.user.create({
-    data: { email, password, name },
+    data: { email, password: hashedPassword, name },
   });
 
+  const token = await sign(
+    {
+      userId: user.id,
+      email: user.email,
+    },
+    process.env.JWT_SECRET!
+  );
+
   return c.json(
-    { user: { id: user.id, email: user.email, name: user.name } },
+    { user: { id: user.id, email: user.email, name: user.name }, token },
     201
   );
 });
@@ -44,11 +57,28 @@ auth.post("/login", zValidator("json", loginSchema), async (c) => {
     where: { email },
   });
 
-  if (!user || user.password !== password) {
+  if (!user) {
     return c.json({ message: "Invalid email or password" }, 401);
   }
 
-  return c.json({ user: { id: user.id, email: user.email, name: user.name } });
+  const passwordMatch = await bcrypt.compare(password, user.password!);
+
+  if (!passwordMatch) {
+    return c.json({ message: "Invalid email or password" }, 401);
+  }
+
+  const token = await sign(
+    {
+      userId: user.id,
+      email: user.email,
+    },
+    process.env.JWT_SECRET!
+  );
+
+  return c.json({
+    user: { id: user.id, email: user.email, name: user.name },
+    token,
+  });
 });
 
 export default auth;
