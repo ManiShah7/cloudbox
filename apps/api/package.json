@@ -12,11 +12,13 @@
     "@prisma/client": "^6.16.2",
     "bcryptjs": "^3.0.2",
     "hono": "^4.9.9",
+    "minio": "^8.0.6",
     "prisma": "^6.16.2",
     "zod": "^4.1.11"
   },
   "devDependencies": {
     "@types/bcryptjs": "^3.0.0",
+    "@types/minio": "^7.1.1",
     "@types/node": "^20.11.17",
     "tsx": "^4.7.1",
     "typescript": "^5.8.3"

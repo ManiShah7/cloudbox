@@ -88,6 +88,7 @@ model File {
   mimeType  String
   key       String
   url       String
+  isPublic  Boolean  @default(false)
   folderId  String?
   userId    String
   createdAt DateTime @default(now())
