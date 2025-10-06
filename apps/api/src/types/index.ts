@@ -1,12 +1,12 @@
 export type JWTPayload = {
-  userId: string;
-  email: string;
-};
+  userId: string
+  email: string
+}
 
 export type Variables = {
-  jwtPayload: JWTPayload;
-};
+  jwtPayload: JWTPayload
+}
 
 export type Env = {
-  Variables: Variables;
-};
+  Variables: Variables
+}

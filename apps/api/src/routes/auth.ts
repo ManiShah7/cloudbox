@@ -1,163 +1,162 @@
-import { zValidator } from "@hono/zod-validator";
-import { z } from "zod";
-import bcrypt from "bcryptjs";
-import { prisma } from "../lib/prisma";
-import { createRouter } from "../lib/hono";
-import { generateTokenPair } from "../lib/token";
-import { getCookie, setCookie } from "hono/cookie";
+import { zValidator } from '@hono/zod-validator'
+import { z } from 'zod'
+import bcrypt from 'bcryptjs'
+import { prisma } from '../lib/prisma'
+import { createRouter } from '../lib/hono'
+import { generateTokenPair } from '../lib/token'
+import { getCookie, setCookie } from 'hono/cookie'
 
-const auth = createRouter();
+const auth = createRouter()
 
 const registerSchema = z.object({
   email: z.email(),
   password: z.string().min(8),
-  name: z.string().min(2),
-});
+  name: z.string().min(2)
+})
 
 const loginSchema = z.object({
   email: z.email(),
-  password: z.string().min(8),
-});
+  password: z.string().min(8)
+})
 
-auth.post("/register", zValidator("json", registerSchema), async (c) => {
-  const { email, password, name } = c.req.valid("json");
+auth.post('/register', zValidator('json', registerSchema), async c => {
+  const { email, password, name } = c.req.valid('json')
 
   const existingUser = await prisma.user.findUnique({
-    where: { email },
-  });
+    where: { email }
+  })
 
   if (existingUser) {
-    return c.json({ message: "User already exists" }, 400);
+    return c.json({ message: 'User already exists' }, 400)
   }
 
-  const hashedPassword = await bcrypt.hash(password, 10);
+  const hashedPassword = await bcrypt.hash(password, 10)
 
-  const { refreshToken } = await generateTokenPair("temp", email);
+  const { refreshToken } = await generateTokenPair('temp', email)
 
   const user = await prisma.user.create({
-    data: { email, password: hashedPassword, name, refreshToken },
-  });
+    data: { email, password: hashedPassword, name, refreshToken }
+  })
 
   const finalAccessToken = await generateTokenPair(user.id, user.email).then(
-    (tokens) => tokens.accessToken
-  );
+    tokens => tokens.accessToken
+  )
 
   // Set HttpOnly cookie for refresh token
-  setCookie(c, "refreshToken", refreshToken, {
+  setCookie(c, 'refreshToken', refreshToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "Strict",
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'Strict',
     maxAge: 7 * 24 * 60 * 60, // 7 days
-    path: "/",
-  });
+    path: '/'
+  })
 
   return c.json(
     {
       user: { id: user.id, email: user.email, name: user.name },
-      accessToken: finalAccessToken,
+      accessToken: finalAccessToken
     },
     201
-  );
-});
+  )
+})
 
-auth.post("/login", zValidator("json", loginSchema), async (c) => {
-  const { email, password } = c.req.valid("json");
+auth.post('/login', zValidator('json', loginSchema), async c => {
+  const { email, password } = c.req.valid('json')
 
   const user = await prisma.user.findUnique({
-    where: { email },
-  });
+    where: { email }
+  })
 
   if (!user) {
-    return c.json({ message: "Invalid email or password" }, 401);
+    return c.json({ message: 'Invalid email or password' }, 401)
   }
 
-  const passwordMatch = await bcrypt.compare(password, user.password!);
+  const passwordMatch = await bcrypt.compare(password, user.password!)
 
   if (!passwordMatch) {
-    return c.json({ message: "Invalid email or password" }, 401);
+    return c.json({ message: 'Invalid email or password' }, 401)
   }
 
-  const { accessToken, refreshToken } = await generateTokenPair(
-    user.id,
-    user.email
-  );
+  const { accessToken, refreshToken } = await generateTokenPair(user.id, user.email)
 
   await prisma.user.update({
     where: { id: user.id },
-    data: { refreshToken },
-  });
+    data: { refreshToken }
+  })
 
-  setCookie(c, "refreshToken", refreshToken, {
+  setCookie(c, 'refreshToken', refreshToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "Strict",
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'Strict',
     maxAge: 7 * 24 * 60 * 60,
-    path: "/",
-  });
+    path: '/'
+  })
 
   return c.json({
     user: {
       id: user.id,
       email: user.email,
-      name: user.name,
+      name: user.name
     },
-    accessToken,
-  });
-});
+    accessToken
+  })
+})
 
-auth.post("/refresh", async (c) => {
-  const refreshToken = getCookie(c, "refreshToken");
+auth.post('/refresh', async c => {
+  const refreshToken = getCookie(c, 'refreshToken')
 
   if (!refreshToken) {
-    return c.json({ message: "No refresh token provided" }, 401);
+    return c.json({ message: 'No refresh token provided' }, 401)
   }
 
   const user = await prisma.user.findFirst({
-    where: { refreshToken },
-  });
+    where: { refreshToken }
+  })
 
   if (!user) {
-    return c.json({ message: "Invalid refresh token" }, 401);
+    return c.json({ message: 'Invalid refresh token' }, 401)
   }
 
-  const { accessToken, refreshToken: newRefreshToken } =
-    await generateTokenPair(user.id, user.email);
+  const { accessToken, refreshToken: newRefreshToken } = await generateTokenPair(
+    user.id,
+    user.email
+  )
 
   await prisma.user.update({
     where: { id: user.id },
-    data: { refreshToken: newRefreshToken },
-  });
+    data: { refreshToken: newRefreshToken }
+  })
 
-  setCookie(c, "refreshToken", newRefreshToken, {
+  setCookie(c, 'refreshToken', newRefreshToken, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "Strict",
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'Strict',
     maxAge: 7 * 24 * 60 * 60,
-    path: "/",
-  });
+    path: '/'
+  })
 
-  return c.json({ accessToken });
-});
+  return c.json({ accessToken })
+})
 
-auth.post("/logout", async (c) => {
-  const refreshToken = getCookie(c, "refreshToken");
+auth.post('/logout', async c => {
+  const refreshToken = getCookie(c, 'refreshToken')
 
   if (refreshToken) {
     await prisma.user.updateMany({
       where: { refreshToken },
-      data: { refreshToken: null },
-    });
+      data: { refreshToken: null }
+    })
   }
 
-  setCookie(c, "refreshToken", "", {
+  setCookie(c, 'refreshToken', '', {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "Strict",
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'Strict',
     maxAge: 0,
-    path: "/",
-  });
+    path: '/'
+  })
 
-  return c.json({ message: "Logged out successfully" });
-});
+  return c.json({ message: 'Logged out successfully' })
+})
 
-export default auth;
+export default auth
