@@ -3,9 +3,7 @@
     "target": "ESNext",
     "module": "esnext",
     "moduleResolution": "bundler",
-    "lib": [
-      "Es2022"
-    ],
+    "lib": ["Es2022"],
     "strict": true,
     "esModuleInterop": true,
     "verbatimModuleSyntax": true,
@@ -13,19 +11,12 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "skipLibCheck": true,
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "jsx": "react-jsx",
     "jsxImportSource": "hono/jsx",
     "outDir": "./dist",
     "rootDir": "./src"
   },
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist"
-  ]
+  "include": ["src/**/*"],
+  "exclude": ["node_modules", "dist"]
 }
