@@ -18,7 +18,8 @@
     "hono": "^4.9.9",
     "minio": "^8.0.6",
     "prisma": "^6.16.2",
-    "zod": "^4.1.11"
+    "zod": "^4.1.11",
+    "shared": "workspace:*"
   },
   "devDependencies": {
     "@types/bcryptjs": "^3.0.0",

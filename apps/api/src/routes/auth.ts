@@ -1,23 +1,12 @@
 import { zValidator } from '@hono/zod-validator'
-import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 import { prisma } from '../lib/prisma'
 import { createRouter } from '../lib/hono'
 import { generateTokenPair } from '../lib/token'
 import { getCookie, setCookie } from 'hono/cookie'
+import { loginSchema, registerSchema } from 'shared/schemas'
 
 const auth = createRouter()
-
-const registerSchema = z.object({
-  email: z.email(),
-  password: z.string().min(8),
-  name: z.string().min(2)
-})
-
-const loginSchema = z.object({
-  email: z.email(),
-  password: z.string().min(8)
-})
 
 auth.post('/register', zValidator('json', registerSchema), async c => {
   const { email, password, name } = c.req.valid('json')
