@@ -1,7 +1,7 @@
 import axios from 'axios'
 import { useAuthStore } from '../store/auth'
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3001/api'
+const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'
 
 export const apiClient = axios.create({
   baseURL: API_URL,
@@ -37,7 +37,7 @@ apiClient.interceptors.response.use(
       originalRequest._retry = true
 
       try {
-        const { data } = await axios.post('/auth/refresh', {}, { withCredentials: true })
+        const { data } = await axios.post(`${API_URL}/auth/refresh`, {}, { withCredentials: true })
 
         useAuthStore.getState().setAuth(data.user, data.accessToken)
         originalRequest.headers.Authorization = `Bearer ${data.accessToken}`

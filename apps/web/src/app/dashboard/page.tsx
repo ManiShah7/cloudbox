@@ -8,9 +8,10 @@ import { useLogout } from '@/lib/queries/auth'
 import { useFiles, useUploadFile, useDeleteFile, useTogglePublic } from '@/lib/queries/files'
 import { Card } from '@/components/ui/card'
 import { formatBytes } from '@/lib/utils'
+import { authApi } from '@/lib/api/auth'
 
 export default function DashboardPage() {
-  const { user, isAuthenticated } = useAuthStore()
+  const { user } = useAuthStore()
   const router = useRouter()
   const logout = useLogout()
   const { data: files, isLoading } = useFiles()
@@ -18,16 +19,7 @@ export default function DashboardPage() {
   const deleteFile = useDeleteFile()
   const togglePublic = useTogglePublic()
   const fileInputRef = useRef<HTMLInputElement>(null)
-
-  useEffect(() => {
-    if (!isAuthenticated) {
-      router.push('/auth/login')
-    }
-  }, [isAuthenticated, router])
-
-  if (!isAuthenticated) {
-    return null
-  }
+  const setAuth = useAuthStore(state => state.setAuth)
 
   const handleLogout = () => {
     logout.mutate(undefined, {
@@ -43,6 +35,19 @@ export default function DashboardPage() {
       uploadFile.mutate({ file })
     }
   }
+
+  useEffect(() => {
+    const initAuth = async () => {
+      try {
+        const data = await authApi.refresh()
+        setAuth(data.user, data.accessToken)
+      } catch (error) {
+        console.log('No valid session')
+      }
+    }
+
+    initAuth()
+  }, [setAuth])
 
   return (
     <div className="min-h-screen bg-slate-50">

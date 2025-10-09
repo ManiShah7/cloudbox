@@ -28,7 +28,8 @@ export default function RootLayout({
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <QueryProvider>
-          {children} <Toaster />
+          {children}
+          <Toaster />
         </QueryProvider>
       </body>
     </html>
