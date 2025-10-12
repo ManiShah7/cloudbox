@@ -1,31 +1,34 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import { useAuthStore } from '../store/auth'
 import { authApi } from '../api/auth'
+import { AxiosError } from 'axios'
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const setAuth = useAuthStore(state => state.setAuth)
-  const [mounted, setMounted] = useState(false)
+  const hasInitialized = useRef(false)
 
   useEffect(() => {
-    setMounted(true)
+    if (hasInitialized.current) return
+    hasInitialized.current = true
 
     const initAuth = async () => {
       try {
         const data = await authApi.refresh()
         setAuth(data.user, data.accessToken)
+        console.log('Auth initialized')
       } catch (error) {
-        console.log('No valid session', error)
+        if (error instanceof AxiosError && error.response?.status === 401) {
+          console.log('No active session')
+        } else {
+          console.error('Auth initialization failed:', error)
+        }
       }
     }
 
     initAuth()
   }, [setAuth])
-
-  if (!mounted) {
-    return <>{children}</>
-  }
 
   return <>{children}</>
 }
