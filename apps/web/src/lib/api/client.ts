@@ -52,6 +52,9 @@ apiClient.interceptors.response.use(
           failedQueue.push({ resolve, reject })
         })
           .then(() => {
+            apiClient(originalRequest())
+          })
+          .then(() => {
             return apiClient(originalRequest)
           })
           .catch(err => {
@@ -76,10 +79,7 @@ apiClient.interceptors.response.use(
         processQueue(refreshError as Error)
         useAuthStore.getState().logout()
 
-        if (typeof window !== 'undefined') {
-          window.location.href = '/auth/login'
-        }
-
+        // Don't redirect here - let AuthProvider handle it
         return Promise.reject(refreshError)
       }
     }

@@ -16,13 +16,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initAuth = async () => {
       try {
         const data = await authApi.refresh()
+        console.log('Auth refreshed', data)
         setAuth(data.user, data.accessToken)
-        console.log('Auth initialized')
       } catch (error) {
+        // Middleware already handles redirects, just log the error
         if (error instanceof AxiosError && error.response?.status === 401) {
-          console.log('No active session')
-        } else {
-          console.error('Auth initialization failed:', error)
+          // No valid session - middleware will redirect if needed
         }
       }
     }

@@ -2,16 +2,16 @@
 
 import { useAuthStore } from '@/lib/store/auth'
 import { useRouter } from 'next/navigation'
-import { useEffect, useRef } from 'react'
+import { useRef } from 'react'
 import { Button } from '@/components/ui/button'
 import { useLogout } from '@/lib/queries/auth'
 import { useFiles, useUploadFile, useDeleteFile, useTogglePublic } from '@/lib/queries/files'
 import { Card } from '@/components/ui/card'
 import { formatBytes } from '@/lib/utils'
-import { authApi } from '@/lib/api/auth'
 
 export default function DashboardPage() {
-  const { user } = useAuthStore()
+  const authState = useAuthStore()
+  const { user } = authState
   const router = useRouter()
   const logout = useLogout()
   const { data: files, isLoading } = useFiles()
@@ -19,7 +19,6 @@ export default function DashboardPage() {
   const deleteFile = useDeleteFile()
   const togglePublic = useTogglePublic()
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const setAuth = useAuthStore(state => state.setAuth)
 
   const handleLogout = () => {
     logout.mutate(undefined, {
@@ -36,18 +35,8 @@ export default function DashboardPage() {
     }
   }
 
-  useEffect(() => {
-    const initAuth = async () => {
-      try {
-        const data = await authApi.refresh()
-        setAuth(data.user, data.accessToken)
-      } catch (error) {
-        console.log('No valid session')
-      }
-    }
-
-    initAuth()
-  }, [setAuth])
+  console.log('Full auth state:', authState)
+  console.log('User only:', user, typeof user)
 
   return (
     <div className="min-h-screen bg-slate-50">

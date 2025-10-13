@@ -124,7 +124,14 @@ auth.post('/refresh', async c => {
     path: '/'
   })
 
-  return c.json({ accessToken })
+  return c.json({
+    user: {
+      id: user.id,
+      email: user.email,
+      name: user.name
+    },
+    accessToken
+  })
 })
 
 auth.post('/logout', async c => {
