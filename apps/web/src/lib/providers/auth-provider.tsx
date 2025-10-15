@@ -16,12 +16,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const initAuth = async () => {
       try {
         const data = await authApi.refresh()
-        console.log('Auth refreshed', data)
         setAuth(data.user, data.accessToken)
       } catch (error) {
-        // Middleware already handles redirects, just log the error
+        // If refresh fails, backend clears the cookie and middleware handles redirect
         if (error instanceof AxiosError && error.response?.status === 401) {
-          // No valid session - middleware will redirect if needed
+          console.error('Not authenticated - cookie cleared by backend')
         }
       }
     }

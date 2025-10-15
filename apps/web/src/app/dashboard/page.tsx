@@ -35,9 +35,6 @@ export default function DashboardPage() {
     }
   }
 
-  console.log('Full auth state:', authState)
-  console.log('User only:', user, typeof user)
-
   return (
     <div className="min-h-screen bg-slate-50">
       <nav className="bg-white shadow-sm border-b">

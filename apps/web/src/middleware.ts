@@ -6,8 +6,15 @@ export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl
 
   // Public routes that don't require authentication
-  const publicRoutes = ['/auth/login', '/auth/register', '/auth/reset-password', '/auth/forgot-password']
+  const publicRoutes = [
+    '/auth/login',
+    '/auth/register',
+    '/auth/reset-password',
+    '/auth/forgot-password'
+  ]
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
+
+  console.log({ refreshToken })
 
   // If user has token and tries to access auth pages, redirect to dashboard
   if (refreshToken && isPublicRoute) {

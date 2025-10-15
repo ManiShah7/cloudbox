@@ -95,6 +95,14 @@ auth.post('/refresh', async c => {
   const refreshToken = getCookie(c, 'refreshToken')
 
   if (!refreshToken) {
+    // Clear the cookie if it exists but is empty/invalid
+    setCookie(c, 'refreshToken', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'Strict',
+      maxAge: 0,
+      path: '/'
+    })
     return c.json({ message: 'No refresh token provided' }, 401)
   }
 
@@ -103,6 +111,14 @@ auth.post('/refresh', async c => {
   })
 
   if (!user) {
+    // Clear the invalid refresh token cookie
+    setCookie(c, 'refreshToken', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'Strict',
+      maxAge: 0,
+      path: '/'
+    })
     return c.json({ message: 'Invalid refresh token' }, 401)
   }
 
