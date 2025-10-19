@@ -50,17 +50,6 @@ files.get('/', async c => {
   return c.json({ files: userFiles })
 })
 
-files.get('/folders', async c => {
-  const { userId } = getCurrentUser(c)
-
-  const folders = await prisma.folder.findMany({
-    where: { userId },
-    orderBy: { createdAt: 'desc' }
-  })
-
-  return c.json({ folders })
-})
-
 const createFolderSchema = z.object({
   name: z.string().min(1).max(255),
   parentId: z.string().optional()
