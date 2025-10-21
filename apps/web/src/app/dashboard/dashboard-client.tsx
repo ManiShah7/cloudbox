@@ -13,11 +13,13 @@ import { UploadDropzone } from '@/components/files/upload-dropzone'
 import { useState } from 'react'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Navbar } from '@/components/layout/navbar'
+import { Breadcrumb } from '@/components/folders/breadcrumb'
+import { EmptyFolder } from '@/components/folders/empty-folder'
 
 export function DashboardClient() {
   const { data: folders, isLoading: foldersLoading } = useFolders()
   const deleteFolder = useDeleteFolder()
-  const { data: files, isLoading } = useFiles()
+  const { data: files, isLoading: filesLoading } = useFiles()
   const deleteFile = useDeleteFile()
   const togglePublic = useTogglePublic()
 
@@ -28,6 +30,10 @@ export function DashboardClient() {
     type: 'file' | 'folder'
     name: string
   } | null>(null)
+  const [currentFolderId, setCurrentFolderId] = useState<string | null>(null)
+
+  const filteredFolders = folders?.filter(f => f.parentId === currentFolderId) || []
+  const filteredFiles = files?.filter(f => f.folderId === currentFolderId) || []
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
@@ -42,7 +48,9 @@ export function DashboardClient() {
           <div>
             <h2 className="text-4xl font-bold text-white mb-2">Your Files</h2>
             <p className="text-slate-300">
-              {files?.length || 0} files • {folders?.length || 0} folders
+              {filteredFiles.length} file{filteredFiles.length !== 1 ? 's' : ''} •{' '}
+              {filteredFolders.length} folder
+              {filteredFolders.length !== 1 ? 's' : ''}
             </p>
           </div>
           <Button
@@ -55,11 +63,28 @@ export function DashboardClient() {
           </Button>
         </motion.div>
 
+        <Breadcrumb
+          currentFolderId={currentFolderId}
+          folders={folders || []}
+          onNavigate={setCurrentFolderId}
+        />
+
         <UploadDropzone />
 
-        {foldersLoading ? (
-          <p className="text-white">Loading folders...</p>
-        ) : folders && folders.length > 0 ? (
+        {(filesLoading || foldersLoading) && (
+          <div className="text-center text-white py-20">
+            <motion.div
+              animate={{ rotate: 360 }}
+              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+              className="inline-block"
+            >
+              ⚡
+            </motion.div>
+            <p className="mt-4">Loading...</p>
+          </div>
+        )}
+
+        {filteredFolders.length > 0 && (
           <div className="mb-8">
             <h3 className="text-xl font-semibold text-white mb-4">Folders</h3>
             <motion.div
@@ -67,14 +92,15 @@ export function DashboardClient() {
               animate={{ opacity: 1 }}
               className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
             >
-              {folders.map((folder, index) => (
+              {filteredFolders.map((folder, index) => (
                 <motion.div
                   key={folder.id}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.05 }}
                   whileHover={{ y: -5, scale: 1.02 }}
-                  className="group"
+                  onClick={() => setCurrentFolderId(folder.id)}
+                  className="group cursor-pointer"
                 >
                   <Card className="bg-white/10 backdrop-blur-lg border border-white/20 p-4 hover:bg-white/20 transition-all duration-300">
                     <div className="flex items-center justify-between mb-2">
@@ -102,26 +128,15 @@ export function DashboardClient() {
               ))}
             </motion.div>
           </div>
-        ) : null}
+        )}
 
-        {isLoading ? (
-          <div className="text-center text-white py-20">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              className="inline-block"
-            >
-              ⚡
-            </motion.div>
-            <p className="mt-4">Loading your files...</p>
-          </div>
-        ) : files && files.length > 0 ? (
+        {filteredFiles && filteredFiles.length > 0 ? (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
-            {files.map((file, index) => (
+            {filteredFiles.map((file, index) => (
               <motion.div
                 key={file.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -190,22 +205,19 @@ export function DashboardClient() {
               </motion.div>
             ))}
           </motion.div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="text-center py-20"
-          >
-            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-12 max-w-md mx-auto border border-white/20 cursor-pointer">
-              <div className="text-6xl mb-4">📁</div>
-              <h3 className="text-2xl font-bold text-white mb-2">No files yet</h3>
-              <p className="text-slate-300">Use the dropzone above to upload your first file!</p>
-            </div>
-          </motion.div>
-        )}
+        ) : null}
+
+        {!filesLoading &&
+          !foldersLoading &&
+          filteredFiles.length === 0 &&
+          filteredFolders.length === 0 && <EmptyFolder />}
       </main>
 
-      <CreateFolderModal open={createFolderOpen} onOpenChange={setCreateFolderOpen} />
+      <CreateFolderModal
+        open={createFolderOpen}
+        onOpenChange={setCreateFolderOpen}
+        parentId={currentFolderId || undefined}
+      />
 
       <ConfirmDialog
         open={deleteConfirm?.open || false}
