@@ -17,7 +17,9 @@ export default function HomePage() {
           <h1 className="text-2xl font-bold text-white">CloudBox</h1>
           <div className="flex gap-4">
             <Link href="/auth/login">
-              <Button variant="outline">Login</Button>
+              <Button variant="outline" className="cursor-pointer">
+                Login
+              </Button>
             </Link>
             <Link href="/auth/register">
               <Button>Get Started</Button>

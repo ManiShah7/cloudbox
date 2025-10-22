@@ -15,6 +15,8 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { Navbar } from '@/components/layout/navbar'
 import { Breadcrumb } from '@/components/folders/breadcrumb'
 import { EmptyFolder } from '@/components/folders/empty-folder'
+import { FilePreviewModal } from '@/components/files/file-preview-modal'
+import type { FileRecord } from 'shared/types'
 
 export function DashboardClient() {
   const { data: folders, isLoading: foldersLoading } = useFolders()
@@ -30,6 +32,7 @@ export function DashboardClient() {
     type: 'file' | 'folder'
     name: string
   } | null>(null)
+  const [previewFile, setPreviewFile] = useState<FileRecord | null>(null)
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null)
 
   const filteredFolders = folders?.filter(f => f.parentId === currentFolderId) || []
@@ -145,7 +148,10 @@ export function DashboardClient() {
                 whileHover={{ y: -5, scale: 1.02 }}
                 className="group"
               >
-                <Card className="bg-white/10 backdrop-blur-lg border border-white/20 cursor-pointer p-6 hover:bg-white/20 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/20">
+                <Card
+                  className="bg-white/10 backdrop-blur-lg border border-white/20 cursor-pointer p-6 hover:bg-white/20 transition-all duration-300 hover:shadow-xl hover:shadow-blue-500/20"
+                  onClick={() => setPreviewFile(file)}
+                >
                   <div className="flex items-start justify-between mb-4">
                     <div className="p-3 bg-blue-500/20 rounded-lg">
                       <FileText className="w-6 h-6 text-blue-400" />
@@ -170,7 +176,10 @@ export function DashboardClient() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={() => togglePublic.mutate(file.id)}
+                      onClick={e => {
+                        e.stopPropagation()
+                        togglePublic.mutate(file.id)
+                      }}
                       className="flex-1 border-white/20 cursor-pointer text-black hover:bg-white/50 cursor-pointer"
                     >
                       {file.isPublic ? (
@@ -188,14 +197,15 @@ export function DashboardClient() {
                     <Button
                       size="sm"
                       variant="destructive"
-                      onClick={() =>
+                      onClick={e => {
+                        e.stopPropagation()
                         setDeleteConfirm({
                           open: true,
                           id: file.id,
                           type: 'file',
                           name: file.name
                         })
-                      }
+                      }}
                       className="bg-red-500/20 hover:bg-red-500/30 border border-red-500/50"
                     >
                       <Trash2 className="w-3 h-3" />
@@ -232,6 +242,12 @@ export function DashboardClient() {
         }}
         title={`Delete ${deleteConfirm?.type}?`}
         description={`Are you sure you want to delete "${deleteConfirm?.name}"? This action cannot be undone.`}
+      />
+
+      <FilePreviewModal
+        file={previewFile}
+        open={!!previewFile}
+        onOpenChange={open => !open && setPreviewFile(null)}
       />
     </div>
   )
