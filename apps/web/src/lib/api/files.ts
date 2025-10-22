@@ -36,6 +36,14 @@ export const filesApi = {
     return data
   },
 
+  analyzeFile: async (fileId: string) => {
+    const { data } = await apiClient.post<{
+      file: FileRecord
+      suggestedName?: string
+    }>(`/files/${fileId}/analyze`)
+    return data
+  },
+
   deleteFile: async (fileId: string) => {
     await apiClient.delete(`/files/${fileId}`)
   },

@@ -5,6 +5,7 @@ import { prisma } from '../lib/prisma'
 import { getCurrentUser } from '../lib/auth'
 import { createRouter } from '../lib/hono'
 import { minioClient, BUCKET_NAME } from '../lib/minio'
+import { analyzeFile } from '../lib/ai'
 
 const files = createRouter()
 
@@ -108,6 +109,52 @@ files.post('/upload', async c => {
   })
 
   return c.json({ file: dbFile }, 201)
+})
+
+files.post('/:fileId/analyze', async c => {
+  const { userId } = getCurrentUser(c)
+  const fileId = c.req.param('fileId')
+
+  const file = await prisma.file.findUnique({
+    where: { id: fileId }
+  })
+
+  if (!file) {
+    return c.json({ error: 'File not found' }, 404)
+  }
+
+  if (file.userId !== userId) {
+    return c.json({ error: 'Unauthorized' }, 403)
+  }
+
+  if (file.aiAnalyzed) {
+    return c.json({
+      file,
+      message: 'File already analyzed'
+    })
+  }
+
+  try {
+    const analysis = await analyzeFile(file.name, file.mimeType, file.size)
+
+    const updatedFile = await prisma.file.update({
+      where: { id: fileId },
+      data: {
+        category: analysis.category,
+        tags: analysis.tags,
+        description: analysis.description,
+        aiAnalyzed: true
+      }
+    })
+
+    return c.json({
+      file: updatedFile,
+      suggestedName: analysis.suggestedName
+    })
+  } catch (error) {
+    console.error('AI analysis error:', error)
+    return c.json({ error: 'Failed to analyze file' }, 500)
+  }
 })
 
 files.get('/:fileId/download', async c => {

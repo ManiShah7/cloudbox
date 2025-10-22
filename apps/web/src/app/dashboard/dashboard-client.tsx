@@ -17,6 +17,8 @@ import { Breadcrumb } from '@/components/folders/breadcrumb'
 import { EmptyFolder } from '@/components/folders/empty-folder'
 import { FilePreviewModal } from '@/components/files/file-preview-modal'
 import type { FileRecord } from 'shared/types'
+import { useAnalyzeFile } from '@/lib/queries/files'
+import { AITags } from '@/components/files/ai-tags'
 
 export function DashboardClient() {
   const { data: folders, isLoading: foldersLoading } = useFolders()
@@ -24,6 +26,7 @@ export function DashboardClient() {
   const { data: files, isLoading: filesLoading } = useFiles()
   const deleteFile = useDeleteFile()
   const togglePublic = useTogglePublic()
+  const analyzeFile = useAnalyzeFile()
 
   const [createFolderOpen, setCreateFolderOpen] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<{
@@ -168,6 +171,21 @@ export function DashboardClient() {
                   <h3 className="font-semibold text-white truncate mb-2 group-hover:text-blue-300 transition-colors">
                     {file.name}
                   </h3>
+
+                  <div className="mb-3">
+                    <AITags
+                      category={file.category}
+                      tags={file.tags || []}
+                      aiAnalyzed={file.aiAnalyzed || false}
+                      onAnalyze={() => analyzeFile.mutate(file.id)}
+                      isAnalyzing={analyzeFile.isPending}
+                    />
+                  </div>
+
+                  {file.description && (
+                    <p className="text-xs text-slate-400 mb-3 line-clamp-2">{file.description}</p>
+                  )}
+
                   <p className="text-sm text-slate-300 mb-4">
                     {formatBytes(file.size)} • {file.isPublic ? 'Public' : 'Private'}
                   </p>

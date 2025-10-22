@@ -39,6 +39,21 @@ export const useUploadFile = () => {
   })
 }
 
+export const useAnalyzeFile = () => {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (fileId: string) => filesApi.analyzeFile(fileId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['files'] })
+      toast.success('AI analysis complete!')
+    },
+    onError: () => {
+      toast.error('Failed to analyze file')
+    }
+  })
+}
+
 export const useDeleteFile = () => {
   const queryClient = useQueryClient()
 
