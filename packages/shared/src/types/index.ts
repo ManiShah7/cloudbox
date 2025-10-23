@@ -6,3 +6,8 @@ export type AuthResponse = {
   user: PrismaUser
   accessToken: string
 }
+
+export type FileFilters = {
+  search?: string
+  category?: string
+}

@@ -2,14 +2,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { filesApi } from '@/lib/api/files'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/lib/store/auth'
+import type { FileFilters } from 'shared/types'
 
-export const useFiles = () => {
-  const isAuthenticated = useAuthStore(state => state.isAuthenticated)
-
+export const useFiles = (params?: FileFilters) => {
   return useQuery({
-    queryKey: ['files'],
-    queryFn: filesApi.getFiles,
-    enabled: isAuthenticated
+    queryKey: ['files', params],
+    queryFn: () => filesApi.getFiles(params)
   })
 }
 

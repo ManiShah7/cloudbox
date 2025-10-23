@@ -1,5 +1,5 @@
 import { apiClient } from './client'
-import type { FileRecord, Folder } from 'shared/types'
+import type { FileFilters, FileRecord, Folder } from 'shared/types'
 
 type FileListResponse = {
   files: FileRecord[]
@@ -10,8 +10,15 @@ type FolderListResponse = {
 }
 
 export const filesApi = {
-  getFiles: async () => {
-    const { data } = await apiClient.get<FileListResponse>('/files')
+  getFiles: async (params?: FileFilters) => {
+    const queryParams = new URLSearchParams()
+    if (params?.search) queryParams.append('search', params.search)
+    if (params?.category) queryParams.append('category', params.category)
+
+    const queryString = queryParams.toString()
+    const url = queryString ? `/files?${queryString}` : '/files'
+
+    const { data } = await apiClient.get<FileListResponse>(url)
     return data.files
   },
 

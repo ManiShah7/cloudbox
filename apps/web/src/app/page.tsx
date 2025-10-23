@@ -1,29 +1,35 @@
+'use client'
+
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
-import type { Metadata } from 'next'
-
-export const metadata: Metadata = {
-  title: 'CloudBox - AI-Powered File Storage',
-  description:
-    'Smart file organization with version control and real-time collaboration. Store your files the intelligent way.',
-  keywords: ['cloud storage', 'file management', 'AI', 'version control', 'collaboration']
-}
+import { useAuthStore } from '@/lib/store/auth'
 
 export default function HomePage() {
+  const auth = useAuthStore()
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900">
       <div className="max-w-7xl mx-auto px-4 py-16">
         <nav className="flex justify-between items-center mb-20">
           <h1 className="text-2xl font-bold text-white">CloudBox</h1>
           <div className="flex gap-4">
-            <Link href="/auth/login">
-              <Button variant="outline" className="cursor-pointer">
-                Login
-              </Button>
-            </Link>
-            <Link href="/auth/register">
-              <Button>Get Started</Button>
-            </Link>
+            {auth.user ? (
+              <Link href="/dashboard">
+                <Button className="cursor-pointer">Dashboard</Button>
+              </Link>
+            ) : (
+              <>
+                <Link href="/auth/login">
+                  <Button variant="outline" className="cursor-pointer">
+                    Login
+                  </Button>
+                </Link>
+
+                <Link href="/auth/register" className="cursor-pointer">
+                  <Button>Get Started</Button>
+                </Link>
+              </>
+            )}
           </div>
         </nav>
 

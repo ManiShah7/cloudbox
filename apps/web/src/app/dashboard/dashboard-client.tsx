@@ -19,15 +19,9 @@ import { FilePreviewModal } from '@/components/files/file-preview-modal'
 import type { FileRecord } from 'shared/types'
 import { useAnalyzeFile } from '@/lib/queries/files'
 import { AITags } from '@/components/files/ai-tags'
+import { SearchBar } from '@/components/files/search-bar'
 
 export function DashboardClient() {
-  const { data: folders, isLoading: foldersLoading } = useFolders()
-  const deleteFolder = useDeleteFolder()
-  const { data: files, isLoading: filesLoading } = useFiles()
-  const deleteFile = useDeleteFile()
-  const togglePublic = useTogglePublic()
-  const analyzeFile = useAnalyzeFile()
-
   const [createFolderOpen, setCreateFolderOpen] = useState(false)
   const [deleteConfirm, setDeleteConfirm] = useState<{
     open: boolean
@@ -37,6 +31,19 @@ export function DashboardClient() {
   } | null>(null)
   const [previewFile, setPreviewFile] = useState<FileRecord | null>(null)
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
+  const [selectedCategory, setSelectedCategory] = useState('all')
+
+  const { data: folders, isLoading: foldersLoading } = useFolders()
+  const deleteFolder = useDeleteFolder()
+  const { data: files, isLoading: filesLoading } = useFiles({
+    search: searchQuery,
+    category: selectedCategory !== 'all' ? selectedCategory : undefined
+  })
+  const deleteFile = useDeleteFile()
+  const togglePublic = useTogglePublic()
+  const analyzeFile = useAnalyzeFile()
+  console.log('Query params:', { searchQuery, selectedCategory }) // 👈 اضافه کن
 
   const filteredFolders = folders?.filter(f => f.parentId === currentFolderId) || []
   const filteredFiles = files?.filter(f => f.folderId === currentFolderId) || []
@@ -73,6 +80,12 @@ export function DashboardClient() {
           currentFolderId={currentFolderId}
           folders={folders || []}
           onNavigate={setCurrentFolderId}
+        />
+
+        <SearchBar
+          onSearch={setSearchQuery}
+          onCategoryChange={setSelectedCategory}
+          selectedCategory={selectedCategory}
         />
 
         <UploadDropzone />

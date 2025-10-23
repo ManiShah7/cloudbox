@@ -6,6 +6,7 @@ import { getCurrentUser } from '../lib/auth'
 import { createRouter } from '../lib/hono'
 import { minioClient, BUCKET_NAME } from '../lib/minio'
 import { analyzeFile } from '../lib/ai'
+import { Prisma } from '@prisma/client'
 
 const files = createRouter()
 
@@ -41,9 +42,25 @@ files.use('/*', jwt({ secret: process.env.JWT_SECRET! }))
 
 files.get('/', async c => {
   const { userId } = getCurrentUser(c)
+  const search = c.req.query('search')
+  const category = c.req.query('category')
+
+  const whereCondition: Prisma.FileWhereInput = { userId }
+
+  if (search) {
+    whereCondition.OR = [
+      { name: { contains: search, mode: 'insensitive' } },
+      { tags: { hasSome: [search] } },
+      { description: { contains: search, mode: 'insensitive' } }
+    ]
+  }
+
+  if (category && category !== 'all') {
+    whereCondition.category = category
+  }
 
   const userFiles = await prisma.file.findMany({
-    where: { userId },
+    where: whereCondition,
     include: { folder: true },
     orderBy: { createdAt: 'desc' }
   })
@@ -107,6 +124,22 @@ files.post('/upload', async c => {
       userId
     }
   })
+
+  analyzeFile(fileName, mimeType, fileSize)
+    .then(async analysis => {
+      await prisma.file.update({
+        where: { id: dbFile.id },
+        data: {
+          category: analysis.category,
+          tags: analysis.tags,
+          description: analysis.description,
+          aiAnalyzed: true
+        }
+      })
+    })
+    .catch(error => {
+      console.error(`Failed to analyze file ${dbFile.id}:`, error)
+    })
 
   return c.json({ file: dbFile }, 201)
 })
