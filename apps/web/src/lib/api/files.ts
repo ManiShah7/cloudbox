@@ -1,13 +1,6 @@
 import { apiClient } from './client'
-import type { FileFilters, FileRecord, Folder } from 'shared/types'
-
-type FileListResponse = {
-  files: FileRecord[]
-}
-
-type FolderListResponse = {
-  folders: Folder[]
-}
+import type { FileFilters } from 'shared/types'
+import type { FileRecord, FileListResponse, FolderListResponse, StorageStats } from 'shared/schemas'
 
 export const filesApi = {
   getFiles: async (params?: FileFilters) => {
@@ -58,5 +51,10 @@ export const filesApi = {
   togglePublic: async (fileId: string) => {
     const { data } = await apiClient.patch<{ file: FileRecord }>(`/files/${fileId}/toggle-public`)
     return data.file
+  },
+
+  getStats: async () => {
+    const { data } = await apiClient.get<StorageStats>('/files/stats')
+    return data
   }
 }

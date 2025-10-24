@@ -7,6 +7,7 @@ import { createRouter } from '../lib/hono'
 import { minioClient, BUCKET_NAME } from '../lib/minio'
 import { analyzeFile } from '../lib/ai'
 import { Prisma } from '@prisma/client'
+import { storageStatsSchema } from 'shared/schemas'
 
 const files = createRouter()
 
@@ -258,6 +259,63 @@ files.patch('/:fileId/toggle-public', async c => {
   })
 
   return c.json({ file: updatedFile })
+})
+
+// Get storage statistics
+files.get('/stats', async c => {
+  const { userId } = getCurrentUser(c)
+
+  const files = await prisma.file.findMany({
+    where: { userId },
+    select: {
+      size: true,
+      category: true,
+      createdAt: true,
+      aiAnalyzed: true
+    }
+  })
+
+  const totalSize = files.reduce((sum, file) => sum + file.size, 0)
+  const totalFiles = files.length
+
+  const categoryStats = files.reduce(
+    (acc, file) => {
+      const cat = file.category || 'uncategorized'
+      acc[cat] = (acc[cat] || 0) + 1
+      return acc
+    },
+    {} as Record<string, number>
+  )
+
+  const aiAnalyzedCount = files.filter(f => f.aiAnalyzed).length
+  const aiAnalyzedPercentage = totalFiles > 0 ? (aiAnalyzedCount / totalFiles) * 100 : 0
+
+  const sevenDaysAgo = new Date()
+  sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7)
+
+  const recentUploads = files.filter(f => f.createdAt >= sevenDaysAgo).length
+
+  const storageByCategory = files.reduce(
+    (acc, file) => {
+      const cat = file.category || 'uncategorized'
+      acc[cat] = (acc[cat] || 0) + file.size
+      return acc
+    },
+    {} as Record<string, number>
+  )
+
+  const stats = {
+    totalSize,
+    totalFiles,
+    categoryStats,
+    aiAnalyzedPercentage,
+    recentUploads,
+    storageByCategory
+  }
+
+  const validatedStats = storageStatsSchema.parse(stats)
+
+  return c.json(validatedStats)
 })
 
 export default files

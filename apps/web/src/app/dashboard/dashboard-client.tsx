@@ -20,6 +20,9 @@ import type { FileRecord } from 'shared/types'
 import { useAnalyzeFile } from '@/lib/queries/files'
 import { AITags } from '@/components/files/ai-tags'
 import { SearchBar } from '@/components/files/search-bar'
+import { StatsOverview } from '@/components/dashboard/stats-overview'
+import { StorageChart } from '@/components/dashboard/storage-chart'
+import { CategoryStats } from '@/components/dashboard/category-stats'
 
 export function DashboardClient() {
   const [createFolderOpen, setCreateFolderOpen] = useState(false)
@@ -87,6 +90,17 @@ export function DashboardClient() {
           onCategoryChange={setSelectedCategory}
           selectedCategory={selectedCategory}
         />
+
+        <StatsOverview />
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+          <div className="lg:col-span-2">
+            <StorageChart />
+          </div>
+          <div>
+            <CategoryStats />
+          </div>
+        </div>
 
         <UploadDropzone />
 

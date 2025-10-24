@@ -3,6 +3,7 @@ import { filesApi } from '@/lib/api/files'
 import { toast } from 'sonner'
 import { useAuthStore } from '@/lib/store/auth'
 import type { FileFilters } from 'shared/types'
+import type { StorageStats } from 'shared/schemas'
 
 export const useFiles = (params?: FileFilters) => {
   return useQuery({
@@ -76,5 +77,12 @@ export const useTogglePublic = () => {
       queryClient.invalidateQueries({ queryKey: ['files'] })
       toast.success('File visibility updated!')
     }
+  })
+}
+
+export const useStorageStats = () => {
+  return useQuery({
+    queryKey: ['storage-stats'],
+    queryFn: filesApi.getStats
   })
 }
