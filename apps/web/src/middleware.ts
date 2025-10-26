@@ -14,8 +14,6 @@ export function middleware(request: NextRequest) {
   ]
   const isPublicRoute = publicRoutes.some(route => pathname.startsWith(route))
 
-  console.log({ refreshToken })
-
   // If user has token and tries to access auth pages, redirect to dashboard
   if (refreshToken && isPublicRoute) {
     return NextResponse.redirect(new URL('/dashboard', request.url))

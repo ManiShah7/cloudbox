@@ -23,6 +23,7 @@ import { SearchBar } from '@/components/files/search-bar'
 import { StatsOverview } from '@/components/dashboard/stats-overview'
 import { StorageChart } from '@/components/dashboard/storage-chart'
 import { CategoryStats } from '@/components/dashboard/category-stats'
+import { EmptyState } from '@/components/dashboard/empty-state'
 
 export function DashboardClient() {
   const [createFolderOpen, setCreateFolderOpen] = useState(false)
@@ -46,7 +47,6 @@ export function DashboardClient() {
   const deleteFile = useDeleteFile()
   const togglePublic = useTogglePublic()
   const analyzeFile = useAnalyzeFile()
-  console.log('Query params:', { searchQuery, selectedCategory }) // 👈 اضافه کن
 
   const filteredFolders = folders?.filter(f => f.parentId === currentFolderId) || []
   const filteredFiles = files?.filter(f => f.folderId === currentFolderId) || []
@@ -262,10 +262,11 @@ export function DashboardClient() {
           </motion.div>
         ) : null}
 
-        {!filesLoading &&
+        {filteredFiles.length === 0 &&
+          filteredFolders.length === 0 &&
+          !filesLoading &&
           !foldersLoading &&
-          filteredFiles.length === 0 &&
-          filteredFolders.length === 0 && <EmptyFolder />}
+          (files?.length === 0 && folders?.length === 0 ? <EmptyState /> : <EmptyFolder />)}
       </main>
 
       <CreateFolderModal

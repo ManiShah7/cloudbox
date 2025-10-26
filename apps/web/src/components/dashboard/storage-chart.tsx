@@ -51,10 +51,19 @@ export function StorageChart() {
             />
             <Tooltip
               contentStyle={{
-                backgroundColor: 'rgba(15, 23, 42, 0.9)',
-                border: '1px solid rgba(255, 255, 255, 0.1)',
+                backgroundColor: 'rgba(15, 23, 42, 0.95)',
+                border: '1px solid rgba(148, 163, 184, 0.3)',
                 borderRadius: '8px',
-                color: '#fff'
+                color: '#f1f5f9',
+                padding: '8px 12px'
+              }}
+              labelStyle={{
+                color: '#f1f5f9',
+                fontWeight: '600',
+                marginBottom: '4px'
+              }}
+              itemStyle={{
+                color: '#cbd5e1'
               }}
               formatter={(value: number) => formatBytes(value)}
             />
