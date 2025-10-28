@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { formatBytes } from '@/lib/utils'
 import type { PublicFileResponse } from 'shared/schemas'
+import Image from 'next/image'
 
 export default function SharedFilePage() {
   const params = useParams()
@@ -36,6 +37,7 @@ export default function SharedFilePage() {
         setFile(data)
       } catch (err) {
         setError('Failed to load file')
+        console.error(err)
       } finally {
         setLoading(false)
       }
@@ -101,11 +103,15 @@ export default function SharedFilePage() {
 
           {isImage && (
             <div className="mt-6 rounded-lg overflow-hidden bg-black/30 p-4">
-              <img
-                src={file.file.url}
-                alt={file.file.name}
-                className="max-w-full max-h-[600px] mx-auto object-contain"
-              />
+              <div className="relative w-full h-[600px]">
+                <Image
+                  src={file.file.url}
+                  alt={file.file.name}
+                  fill
+                  className="object-contain"
+                  unoptimized
+                />
+              </div>
             </div>
           )}
         </Card>
