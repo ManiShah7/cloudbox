@@ -25,8 +25,8 @@ export default function HomePage() {
                   </Button>
                 </Link>
 
-                <Link href="/auth/register" className="cursor-pointer">
-                  <Button>Get Started</Button>
+                <Link href="/auth/register">
+                  <Button className="cursor-pointer">Get Started</Button>
                 </Link>
               </>
             )}

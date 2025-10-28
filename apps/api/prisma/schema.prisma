@@ -98,9 +98,24 @@ model File {
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
+  SharedLink SharedLink[]
+
   user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
   folder Folder? @relation(fields: [folderId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([folderId])
+}
+
+model SharedLink {
+  id        String    @id @default(cuid())
+  token     String    @unique
+  fileId    String
+  file      File      @relation(fields: [fileId], references: [id], onDelete: Cascade)
+  expiresAt DateTime?
+  viewCount Int       @default(0)
+  createdAt DateTime  @default(now())
+
+  @@index([token])
+  @@index([fileId])
 }

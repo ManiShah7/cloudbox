@@ -24,6 +24,8 @@ import { StatsOverview } from '@/components/dashboard/stats-overview'
 import { StorageChart } from '@/components/dashboard/storage-chart'
 import { CategoryStats } from '@/components/dashboard/category-stats'
 import { EmptyState } from '@/components/dashboard/empty-state'
+import { ShareModal } from '@/components/share/share-modal'
+import { Share2 } from 'lucide-react'
 
 export function DashboardClient() {
   const [createFolderOpen, setCreateFolderOpen] = useState(false)
@@ -37,6 +39,7 @@ export function DashboardClient() {
   const [currentFolderId, setCurrentFolderId] = useState<string | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [selectedCategory, setSelectedCategory] = useState('all')
+  const [shareModal, setShareModal] = useState<{ fileId: string; fileName: string } | null>(null)
 
   const { data: folders, isLoading: foldersLoading } = useFolders()
   const deleteFolder = useDeleteFolder()
@@ -223,6 +226,19 @@ export function DashboardClient() {
                       variant="outline"
                       onClick={e => {
                         e.stopPropagation()
+                        setShareModal({ fileId: file.id, fileName: file.name })
+                      }}
+                      className="flex-1 border-white/20 hover:bg-white/10 cursor-pointer"
+                    >
+                      <Share2 className="w-3 h-3 mr-1" />
+                      Share
+                    </Button>
+
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={e => {
+                        e.stopPropagation()
                         togglePublic.mutate(file.id)
                       }}
                       className="flex-1 border-white/20 cursor-pointer text-black hover:bg-white/50 cursor-pointer"
@@ -294,6 +310,13 @@ export function DashboardClient() {
         file={previewFile}
         open={!!previewFile}
         onOpenChange={open => !open && setPreviewFile(null)}
+      />
+
+      <ShareModal
+        fileId={shareModal?.fileId || ''}
+        fileName={shareModal?.fileName || ''}
+        open={!!shareModal}
+        onOpenChange={open => !open && setShareModal(null)}
       />
     </div>
   )
