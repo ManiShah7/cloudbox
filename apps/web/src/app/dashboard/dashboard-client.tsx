@@ -2,13 +2,12 @@
 
 import { useFolders, useDeleteFolder } from '@/lib/queries/folders'
 import { CreateFolderModal } from '@/components/folders/create-folder-modal'
-import { Folder, FolderOpen } from 'lucide-react'
+import { Folder, FolderOpen, Share2, Lock, Unlock, Trash2, FileText } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useFiles, useDeleteFile, useTogglePublic } from '@/lib/queries/files'
 import { Card } from '@/components/ui/card'
 import { formatBytes } from '@/lib/utils'
 import { motion } from 'motion/react'
-import { Lock, Unlock, Trash2, FileText } from 'lucide-react'
 import { UploadDropzone } from '@/components/files/upload-dropzone'
 import { useState } from 'react'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
@@ -25,7 +24,8 @@ import { StorageChart } from '@/components/dashboard/storage-chart'
 import { CategoryStats } from '@/components/dashboard/category-stats'
 import { EmptyState } from '@/components/dashboard/empty-state'
 import { ShareModal } from '@/components/share/share-modal'
-import { Share2 } from 'lucide-react'
+import { FileCardSkeleton } from '@/components/skeletons/file-card-skeleton'
+import { FolderCardSkeleton } from '@/components/skeletons/folder-card-skeleton'
 
 export function DashboardClient() {
   const [createFolderOpen, setCreateFolderOpen] = useState(false)
@@ -107,20 +107,18 @@ export function DashboardClient() {
 
         <UploadDropzone />
 
-        {(filesLoading || foldersLoading) && (
-          <div className="text-center text-white py-20">
-            <motion.div
-              animate={{ rotate: 360 }}
-              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-              className="inline-block"
-            >
-              ⚡
-            </motion.div>
-            <p className="mt-4">Loading...</p>
+        {foldersLoading && (
+          <div className="mb-8">
+            <h3 className="text-xl font-semibold text-white mb-4">Folders</h3>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              {[...Array(4)].map((_, i) => (
+                <FolderCardSkeleton key={i} />
+              ))}
+            </div>
           </div>
         )}
 
-        {filteredFolders.length > 0 && (
+        {!foldersLoading && filteredFolders.length > 0 && (
           <div className="mb-8">
             <h3 className="text-xl font-semibold text-white mb-4">Folders</h3>
             <motion.div
@@ -166,7 +164,15 @@ export function DashboardClient() {
           </div>
         )}
 
-        {filteredFiles && filteredFiles.length > 0 ? (
+        {filesLoading && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(6)].map((_, i) => (
+              <FileCardSkeleton key={i} />
+            ))}
+          </div>
+        )}
+
+        {!filesLoading && filteredFiles && filteredFiles.length > 0 && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -241,7 +247,7 @@ export function DashboardClient() {
                         e.stopPropagation()
                         togglePublic.mutate(file.id)
                       }}
-                      className="flex-1 border-white/20 cursor-pointer text-black hover:bg-white/50 cursor-pointer"
+                      className="flex-1 border-white/20 cursor-pointer text-black hover:bg-white/50"
                     >
                       {file.isPublic ? (
                         <>
@@ -276,12 +282,12 @@ export function DashboardClient() {
               </motion.div>
             ))}
           </motion.div>
-        ) : null}
+        )}
 
-        {filteredFiles.length === 0 &&
-          filteredFolders.length === 0 &&
-          !filesLoading &&
+        {!filesLoading &&
           !foldersLoading &&
+          filteredFiles.length === 0 &&
+          filteredFolders.length === 0 &&
           (files?.length === 0 && folders?.length === 0 ? <EmptyState /> : <EmptyFolder />)}
       </main>
 

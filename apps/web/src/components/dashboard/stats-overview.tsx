@@ -5,6 +5,7 @@ import { Card } from '@/components/ui/card'
 import { formatBytes } from '@/lib/utils'
 import { motion } from 'motion/react'
 import { HardDrive, FileText, Sparkles, TrendingUp } from 'lucide-react'
+import { StatsCardSkeleton } from '@/components/skeletons/stats-card-skeleton'
 
 export function StatsOverview() {
   const { data: stats, isLoading } = useStorageStats()
@@ -13,12 +14,7 @@ export function StatsOverview() {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {[...Array(4)].map((_, i) => (
-          <Card
-            key={i}
-            className="p-6 bg-white/10 backdrop-blur-lg border border-white/20 animate-pulse"
-          >
-            <div className="h-20" />
-          </Card>
+          <StatsCardSkeleton key={i} />
         ))}
       </div>
     )
