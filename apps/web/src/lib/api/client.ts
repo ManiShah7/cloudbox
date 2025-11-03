@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { useAuthStore } from '../store/auth'
+import { toast } from 'sonner'
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api'
 
@@ -51,15 +52,8 @@ apiClient.interceptors.response.use(
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject })
         })
-          .then(() => {
-            apiClient(originalRequest())
-          })
-          .then(() => {
-            return apiClient(originalRequest)
-          })
-          .catch(err => {
-            return Promise.reject(err)
-          })
+          .then(() => apiClient(originalRequest))
+          .catch(err => Promise.reject(err))
       }
 
       originalRequest._retry = true
@@ -78,10 +72,27 @@ apiClient.interceptors.response.use(
         isRefreshing = false
         processQueue(refreshError as Error)
         useAuthStore.getState().logout()
-
-        // Don't redirect here - let AuthProvider handle it
         return Promise.reject(refreshError)
       }
+    }
+
+    const message = error.response?.data?.error || error.message || 'Something went wrong'
+    const status = error.response?.status
+
+    if (status === 403) {
+      toast.error('You do not have permission to perform this action')
+    } else if (status === 404) {
+      toast.error('Resource not found')
+    } else if (status === 413) {
+      toast.error('File is too large. Maximum size is 100MB.')
+    } else if (status === 429) {
+      toast.error('Too many requests. Please slow down.')
+    } else if (status && status >= 500) {
+      toast.error('Server error. Please try again later.')
+    } else if (!navigator.onLine) {
+      toast.error('No internet connection')
+    } else if (status !== 401) {
+      toast.error(message)
     }
 
     return Promise.reject(error)

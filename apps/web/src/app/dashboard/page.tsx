@@ -1,5 +1,10 @@
 import { DashboardClient } from './dashboard-client'
+import { ErrorBoundary } from '@/components/error-boundary'
 
 export default function DashboardPage() {
-  return <DashboardClient />
+  return (
+    <ErrorBoundary>
+      <DashboardClient />
+    </ErrorBoundary>
+  )
 }

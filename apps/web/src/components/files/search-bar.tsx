@@ -54,7 +54,7 @@ export function SearchBar({ onSearch, onCategoryChange, selectedCategory }: Sear
             placeholder="Search files by name, tags, or description..."
             value={query}
             onChange={e => setQuery(e.target.value)}
-            className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-slate-400"
+            className="pl-10 text-sm bg-white/10 border-white/20 text-white placeholder:text-slate-400"
           />
           {query && (
             <Button
