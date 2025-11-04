@@ -8,6 +8,9 @@ import { minioClient, BUCKET_NAME } from '../lib/minio'
 import { analyzeFile } from '../lib/ai'
 import { Prisma } from '@prisma/client'
 import { storageStatsSchema } from 'shared/schemas'
+import { rateLimit } from '../middleware/rate-limit'
+import { sanitizeFileName, validateFile } from '../lib/file-validation'
+import { Readable } from 'stream'
 
 const files = createRouter()
 
@@ -89,47 +92,60 @@ files.post('/folders', zValidator('json', createFolderSchema), async c => {
   return c.json({ folder }, 201)
 })
 
+files.use(
+  '/upload',
+  rateLimit({
+    windowMs: 900000, // 15 minutes
+    max: 50,
+    message: 'Too many uploads. Please try again later.'
+  })
+)
+
 files.post('/upload', async c => {
   const { userId } = getCurrentUser(c)
 
   const body = await c.req.parseBody()
-  const file = body['file']
+  const file = body['file'] as File
+  const folderId = body['folderId'] as string | undefined
 
   if (!file || !(file instanceof File)) {
     return c.json({ error: 'No file provided' }, 400)
   }
 
-  const fileName = file.name
-  const fileSize = file.size
-  const mimeType = file.type
-  const folderId = body['folderId'] as string | undefined
+  try {
+    validateFile(file)
+  } catch (error) {
+    return c.json({ error: (error as Error).message }, 400)
+  }
 
-  const fileKey = `${userId}/${crypto.randomUUID()}-${fileName}`
+  const sanitizedName = sanitizeFileName(file.name)
+  const key = `${userId}/${Date.now()}-${sanitizedName}`
 
   const buffer = await file.arrayBuffer()
+  const stream = Readable.from(Buffer.from(buffer))
 
-  await minioClient.putObject(BUCKET_NAME, fileKey, Buffer.from(buffer), fileSize, {
-    'Content-Type': mimeType
+  await minioClient.putObject(BUCKET_NAME, key, stream, file.size, {
+    'Content-Type': file.type
   })
 
-  const url = await minioClient.presignedGetObject(BUCKET_NAME, fileKey, 7 * 24 * 60 * 60)
+  const url = await minioClient.presignedGetObject(BUCKET_NAME, key, 7 * 24 * 60 * 60)
 
-  const dbFile = await prisma.file.create({
+  const newFile = await prisma.file.create({
     data: {
-      name: fileName,
-      size: fileSize,
-      mimeType,
-      key: fileKey,
+      name: sanitizedName,
+      size: file.size,
+      mimeType: file.type,
+      key,
       url,
-      folderId: folderId || null,
-      userId
+      userId,
+      folderId
     }
   })
 
-  analyzeFile(fileName, mimeType, fileSize)
+  analyzeFile(sanitizedName, file.type, file.size)
     .then(async analysis => {
       await prisma.file.update({
-        where: { id: dbFile.id },
+        where: { id: newFile.id },
         data: {
           category: analysis.category,
           tags: analysis.tags,
@@ -139,10 +155,10 @@ files.post('/upload', async c => {
       })
     })
     .catch(error => {
-      console.error(`Failed to analyze file ${dbFile.id}:`, error)
+      console.error(`Failed to analyze file ${newFile.id}:`, error)
     })
 
-  return c.json({ file: dbFile }, 201)
+  return c.json({ file: newFile }, 201)
 })
 
 files.post('/:fileId/analyze', async c => {
