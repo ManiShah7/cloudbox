@@ -1,6 +1,7 @@
 'use client'
 
-import { DashboardClient } from '../../dashboard-client'
+import { AuthGuard } from '@/components/auth/auth-guard'
+import { DashboardClient } from '@/app/dashboard/dashboard-client'
 import { use } from 'react'
 
 type PageProps = {
@@ -10,5 +11,9 @@ type PageProps = {
 export default function FolderPage({ params }: PageProps) {
   const { folderId } = use(params)
 
-  return <DashboardClient initialFolderId={folderId} />
+  return (
+    <AuthGuard>
+      <DashboardClient initialFolderId={folderId} />
+    </AuthGuard>
+  )
 }

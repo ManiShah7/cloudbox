@@ -32,6 +32,9 @@ const processQueue = (error: Error | null) => {
 
 apiClient.interceptors.request.use(config => {
   const token = useAuthStore.getState().accessToken
+
+  console.log('🔑 Sending token:', token ? 'EXISTS' : 'MISSING') // debug
+
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }

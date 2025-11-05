@@ -34,7 +34,7 @@ export function UploadDropzone() {
           ${
             isDragActive
               ? 'border-blue-400 bg-blue-500/20 scale-105'
-              : 'border-white/30 bg-white/5 hover:bg-white/50 hover:border-white/50'
+              : 'border-white/30 bg-white/5 hover:bg-white/10 hover:border-white/50'
           }
         `}
       >
@@ -59,6 +59,7 @@ export function UploadDropzone() {
           <h3 className="text-xl font-semibold text-white mb-2">
             {isDragActive ? 'Drop your file here' : 'Upload your files'}
           </h3>
+
           <p className="text-slate-300">
             {isDragActive ? 'Release to upload' : 'Drag & drop files here, or click to browse'}
           </p>

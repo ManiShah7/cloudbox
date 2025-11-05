@@ -11,6 +11,7 @@ import { storageStatsSchema } from 'shared/schemas'
 import { rateLimit } from '../middleware/rate-limit'
 import { sanitizeFileName, validateFile } from '../lib/file-validation'
 import { Readable } from 'stream'
+import { HTTPException } from 'hono/http-exception'
 
 const files = createRouter()
 
@@ -42,7 +43,13 @@ files.get('/public/:fileId', async c => {
   })
 })
 
-files.use('/*', jwt({ secret: process.env.JWT_SECRET! }))
+files.use('/*', async (c, next) => {
+  try {
+    await jwt({ secret: process.env.JWT_SECRET! })(c, next)
+  } catch {
+    throw new HTTPException(401, { message: 'Invalid or missing token' })
+  }
+})
 
 files.get('/', async c => {
   const { userId } = getCurrentUser(c)

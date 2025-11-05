@@ -111,10 +111,13 @@ auth.post(
 )
 
 auth.post('/refresh', async c => {
+  console.log('🔄 Refresh endpoint called')
+
   const refreshToken = getCookie(c, 'refreshToken')
+  console.log('🍪 Refresh token from cookie:', refreshToken ? 'EXISTS' : 'MISSING')
 
   if (!refreshToken) {
-    // Clear the cookie if it exists but is empty/invalid
+    console.log('❌ No refresh token')
     setCookie(c, 'refreshToken', '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -129,8 +132,10 @@ auth.post('/refresh', async c => {
     where: { refreshToken }
   })
 
+  console.log('👤 User found:', user ? user.email : 'NOT FOUND')
+
   if (!user) {
-    // Clear the invalid refresh token cookie
+    console.log('❌ Invalid refresh token')
     setCookie(c, 'refreshToken', '', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
@@ -159,6 +164,8 @@ auth.post('/refresh', async c => {
     path: '/'
   })
 
+  console.log('✅ Refresh successful for:', user.email)
+
   return c.json({
     user: {
       id: user.id,
@@ -168,7 +175,6 @@ auth.post('/refresh', async c => {
     accessToken
   })
 })
-
 auth.post('/logout', async c => {
   const refreshToken = getCookie(c, 'refreshToken')
 
