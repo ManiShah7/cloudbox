@@ -11,6 +11,13 @@ services:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cloudbox-network
 
   redis:
     image: redis:7-alpine
@@ -20,6 +27,13 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - cloudbox-network
 
   minio:
     image: minio/minio
@@ -34,8 +48,64 @@ services:
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 30s
+      timeout: 20s
+      retries: 3
+    networks:
+      - cloudbox-network
+
+  api:
+    build:
+      context: .
+      dockerfile: apps/api/Dockerfile
+    container_name: cloudbox-api
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/cloudbox
+      JWT_SECRET: ${JWT_SECRET}
+      MINIO_ENDPOINT: minio
+      MINIO_PORT: 9000
+      MINIO_ACCESS_KEY: minioadmin
+      MINIO_SECRET_KEY: minioadmin
+      MINIO_USE_SSL: false
+      MINIO_BUCKET_NAME: cloudbox
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+      FRONTEND_URL: http://localhost:3001
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      minio:
+        condition: service_healthy
+    networks:
+      - cloudbox-network
+
+  web:
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+    container_name: cloudbox-web
+    restart: always
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_API_URL: http://localhost:3000/api
+    ports:
+      - "3001:3001"
+    depends_on:
+      - api
+    networks:
+      - cloudbox-network
 
 volumes:
   postgres_data:
   redis_data:
   minio_data:
+
+networks:
+  cloudbox-network:
+    driver: bridge

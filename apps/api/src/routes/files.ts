@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { prisma } from '../lib/prisma'
 import { getCurrentUser } from '../lib/auth'
 import { createRouter } from '../lib/hono'
-import { minioClient, BUCKET_NAME } from '../lib/minio'
+import { minioClient, getBucketName } from '../lib/minio'
 import { analyzeFile } from '../lib/ai'
 import { Prisma } from '@prisma/client'
 import { storageStatsSchema } from 'shared/schemas'
@@ -30,7 +30,7 @@ files.get('/public/:fileId', async c => {
     return c.json({ error: 'File is private' }, 403)
   }
 
-  const url = await minioClient.presignedGetObject(BUCKET_NAME, file.key, 7 * 24 * 60 * 60)
+  const url = await minioClient.presignedGetObject(getBucketName(), file.key, 7 * 24 * 60 * 60)
 
   return c.json({
     file: {
@@ -131,11 +131,11 @@ files.post('/upload', async c => {
   const buffer = await file.arrayBuffer()
   const stream = Readable.from(Buffer.from(buffer))
 
-  await minioClient.putObject(BUCKET_NAME, key, stream, file.size, {
+  await minioClient.putObject(getBucketName(), key, stream, file.size, {
     'Content-Type': file.type
   })
 
-  const url = await minioClient.presignedGetObject(BUCKET_NAME, key, 7 * 24 * 60 * 60)
+  const url = await minioClient.presignedGetObject(getBucketName(), key, 7 * 24 * 60 * 60)
 
   const newFile = await prisma.file.create({
     data: {
@@ -230,7 +230,7 @@ files.get('/:fileId/download', async c => {
     return c.json({ error: 'Unauthorized' }, 403)
   }
 
-  const url = await minioClient.presignedGetObject(BUCKET_NAME, file.key, 60 * 60)
+  const url = await minioClient.presignedGetObject(getBucketName(), file.key, 60 * 60)
 
   return c.json({ url })
 })
@@ -251,7 +251,7 @@ files.delete('/:fileId', async c => {
     return c.json({ error: 'Unauthorized' }, 403)
   }
 
-  await minioClient.removeObject(BUCKET_NAME, file.key)
+  await minioClient.removeObject(getBucketName(), file.key)
 
   await prisma.file.delete({
     where: { id: fileId }

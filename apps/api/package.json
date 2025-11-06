@@ -18,6 +18,7 @@
     "@hono/zod-validator": "^0.7.3",
     "@prisma/client": "^6.16.2",
     "bcryptjs": "^3.0.2",
+    "dotenv": "^17.2.3",
     "hono": "^4.9.9",
     "minio": "^8.0.6",
     "prisma": "^6.16.2",

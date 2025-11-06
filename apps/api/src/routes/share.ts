@@ -5,7 +5,7 @@ import { z } from 'zod'
 import { prisma } from '../lib/prisma'
 import { getCurrentUser } from '../lib/auth'
 import { createRouter } from '../lib/hono'
-import { minioClient, BUCKET_NAME } from '../lib/minio'
+import { minioClient, getBucketName } from '../lib/minio'
 import crypto from 'crypto'
 
 const share = createRouter()
@@ -121,7 +121,7 @@ sharePublic.get('/:token', async c => {
     data: { viewCount: link.viewCount + 1 }
   })
 
-  const url = await minioClient.presignedGetObject(BUCKET_NAME, link.file.key, 60 * 60)
+  const url = await minioClient.presignedGetObject(getBucketName(), link.file.key, 60 * 60)
 
   return c.json({
     file: {
