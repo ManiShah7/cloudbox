@@ -10,7 +10,7 @@ const envSchema = z.object({
   MINIO_ACCESS_KEY: z.string().min(1, 'MINIO_ACCESS_KEY is required'),
   MINIO_SECRET_KEY: z.string().min(1, 'MINIO_SECRET_KEY is required'),
   MINIO_USE_SSL: z.string().default('false'),
-  BUCKET_NAME: z.string().default('cloudbox'),
+  MINIO_BUCKET_NAME: z.string().default('cloudbox'),
   ANTHROPIC_API_KEY: z.string().min(1, 'ANTHROPIC_API_KEY is required'),
   FRONTEND_URL: z.url().default('http://localhost:3001')
 })

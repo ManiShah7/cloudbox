@@ -1,3 +1,4 @@
+import './config/env.js'
 import { serve } from '@hono/node-server'
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
@@ -54,13 +55,8 @@ const port = 3000
 
 const startServer = async () => {
   try {
-    console.log('Validating environment variables...')
     validateEnv()
-    console.log('Environment variables validated')
-
-    console.log('Ensuring MinIO bucket exists...')
     await ensureBucketExists()
-    console.log('MinIO bucket ready')
 
     serve(
       {

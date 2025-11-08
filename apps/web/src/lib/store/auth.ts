@@ -5,15 +5,19 @@ import { persist } from 'zustand/middleware'
 type AuthState = {
   user: User | null
   accessToken: string | null
+  isAuthenticated: boolean
   setAuth: (user: User, accessToken: string) => void
   logout: () => void
 }
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    set => ({
+    (set, get) => ({
       user: null,
       accessToken: null,
+      get isAuthenticated() {
+        return !!get().accessToken
+      },
       setAuth: (user, accessToken) => set({ user, accessToken }),
       logout: () => {
         set({ user: null, accessToken: null })
