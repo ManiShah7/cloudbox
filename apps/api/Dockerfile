@@ -15,18 +15,20 @@ COPY --from=dependencies /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=dependencies /app/packages/shared/node_modules ./packages/shared/node_modules
 COPY . .
 RUN pnpm --filter shared build
-RUN pnpm --filter api build
 WORKDIR /app/apps/api
 RUN pnpm prisma generate
 
 FROM base AS runtime
 WORKDIR /app
+ENV NODE_ENV=production
+COPY --from=build /app/package.json ./package.json
+COPY --from=build /app/pnpm-workspace.yaml ./pnpm-workspace.yaml
 COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/apps/api/package.json ./package.json
-COPY --from=build /app/apps/api/dist ./dist
-COPY --from=build /app/packages/shared/dist ./packages/shared/dist
-COPY --from=build /app/apps/api/prisma ./prisma
+COPY --from=build /app/apps/api ./apps/api
+COPY --from=build /app/packages/shared ./packages/shared
+WORKDIR /app/apps/api
+RUN chmod +x docker-entrypoint.sh
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
     CMD node -e "require('http').get('http://localhost:3000/health', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"
-CMD ["node", "dist/index.js"]
+CMD ["./docker-entrypoint.sh"]

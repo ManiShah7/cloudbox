@@ -26,17 +26,14 @@ export function AuthGuard({ children }: AuthGuardProps) {
       }
 
       try {
-        console.log('🔄 Attempting token refresh...')
         const { data } = await axios.post(
           `${process.env.NEXT_PUBLIC_API_URL}/auth/refresh`,
           {},
           { withCredentials: true }
         )
-        console.log('✅ Token refreshed successfully')
         setAuth(data.user, data.accessToken)
         setIsChecking(false)
-      } catch (error) {
-        console.log('❌ Token refresh failed:', error)
+      } catch {
         logout()
         router.push('/login')
       }

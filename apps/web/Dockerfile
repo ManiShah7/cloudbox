@@ -15,8 +15,8 @@ COPY --from=dependencies /app/apps/web/node_modules ./apps/web/node_modules
 COPY --from=dependencies /app/packages/shared/node_modules ./packages/shared/node_modules
 COPY . .
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN pnpm --filter @cloudbox/shared build
-RUN pnpm --filter @cloudbox/web build
+RUN pnpm --filter shared build
+RUN pnpm --filter web build
 
 FROM base AS runtime
 WORKDIR /app
