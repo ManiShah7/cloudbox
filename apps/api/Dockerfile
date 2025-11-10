@@ -17,6 +17,7 @@ COPY . .
 RUN pnpm --filter shared build
 WORKDIR /app/apps/api
 RUN pnpm prisma generate
+RUN pnpm build
 
 FROM base AS runtime
 WORKDIR /app
