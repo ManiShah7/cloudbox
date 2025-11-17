@@ -14,9 +14,12 @@ COPY --from=dependencies /app/node_modules ./node_modules
 COPY --from=dependencies /app/apps/api/node_modules ./apps/api/node_modules
 COPY --from=dependencies /app/packages/shared/node_modules ./packages/shared/node_modules
 COPY . .
-RUN pnpm --filter shared build
 WORKDIR /app/apps/api
 RUN pnpm prisma generate
+WORKDIR /app
+RUN pnpm --filter shared build
+WORKDIR /app/apps/api
+RUN pnpm build
 
 FROM base AS runtime
 WORKDIR /app

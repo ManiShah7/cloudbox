@@ -51,7 +51,7 @@ app.onError((err, c) => {
   )
 })
 
-const port = 3000
+const port = parseInt(process.env.PORT || '3000')
 
 const startServer = async () => {
   try {
